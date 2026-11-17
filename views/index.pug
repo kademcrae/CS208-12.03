@@ -1,23 +1,43 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
-  ol
-  each val in todos
-    li
-      span= val.task + ' - '
-      if val.completed > 0
-        span Completed
+  main.workspace
+    header.page-header
+      p.eyebrow YOUR EVERYDAY PLANNER
+      h1 My Simple TODO
+      p.subtitle A little focus. A little progress. One task at a time.
+    section.panel(aria-labelledby='add-heading')
+      h2#add-heading Add a new task
+      form.create-form(method='POST' action='/create')
+        .field
+          label(for='task') Task description
+          input(type='text' name='task' id='task' required maxlength='255' pattern='.*\\S.*' placeholder='What would you like to get done?')
+        button(type='submit') Create Task
+    section.tasks(aria-labelledby='tasks-heading')
+      .section-heading
+        h2#tasks-heading Your tasks
+        span.count #{todos.filter(todo => todo.completed > 0).length} of #{todos.length} completed
+      if todos.length
+        ol.task-list
+          each val in todos
+            li.task-card(class=val.completed > 0 ? 'is-complete' : '')
+              .task-heading
+                h3= val.task
+                span.status= val.completed > 0 ? 'Completed' : 'Not Completed'
+              form.edit-form(method='POST' action='/update')
+                input(type='hidden' name='id' value=val.id)
+                .field
+                  label(for='task-' + val.id) Edit description
+                  input(type='text' name='task' id='task-' + val.id value=val.task required maxlength='255' pattern='.*\\S.*')
+                .task-actions
+                  label.checkbox-label(for='completed-' + val.id)
+                    input(type='checkbox' name='completed' id='completed-' + val.id value='1' checked=val.completed > 0)
+                    | Completed
+                  button(type='submit') Save changes
+              form.delete-form(method='POST' action='/delete')
+                input(type='hidden' name='id' value=val.id)
+                button.danger(type='submit' aria-label='Delete task: ' + val.task) Delete
       else
-        span Not Completed
-      form(method='POST' action='/delete')
-        input(type='hidden', name='id', value=val.id)
-        button(type='submit') Delete
-
-  hr
-  h2 Add a new task
-  form(method='POST' action='/create')
-    label(for='task') Task:
-    input(type='text', name='task', id='task', required)
-    button(type='submit') Create Task
+        .empty-state
+          h3 A fresh start
+          p Add your first task above to get going.
